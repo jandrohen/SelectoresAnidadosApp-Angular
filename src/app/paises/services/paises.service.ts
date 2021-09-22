@@ -19,7 +19,7 @@ export class PaisesService {
 
   getPaisesPorRegion( region: string ): Observable<PaisSmall[]> {
 
-    const url: string = `${ this._baseUrl }/continent/${ region }?fields=`;
+    const url: string = `${ this._baseUrl }/continent/${ region }?fields=name,alpha3Code`;
     return this.http.get<PaisSmall[]>(url);
   }
 
