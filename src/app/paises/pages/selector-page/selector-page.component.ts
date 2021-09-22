@@ -23,6 +23,7 @@ export class SelectorPageComponent implements OnInit {
   // llenar selectores
   regiones: string[] = [];
   paises: PaisSmall[] = [];
+  fronteras: string[] = [];
 
 
   constructor(private fb: FormBuilder,
@@ -31,20 +32,7 @@ export class SelectorPageComponent implements OnInit {
   ngOnInit(): void {
     this.regiones = this.paisesService.regiones;
 
-    //Nos suscribimos al cambio del primer selector, para coger el valor seleccionado
-    // this.miFormulario.get('region')?.valueChanges
-    //     .subscribe( region => {
-    //      console.log(region)
-    //Hacemos la petición a la api con el valor seleccionado y llenamos el 2º selector
-    // this.paisesService.getPaisesPorRegion( region )
-    //   .subscribe( paises => {
-    //     console.log(paises)
-    //     this.paises = paises;
-    //   }) ;
-    //
-    // });
-
-    //Nos suscribimos al cambio del primer selector, para coger el valor seleccionado
+    //Nos suscribimos al cambio del primer selector, para coger el value seleccionado
     this.miFormulario.get('region')?.valueChanges
       //Gestionamos el primer observable con el operador pipe de rxjs
       .pipe(
@@ -57,14 +45,29 @@ export class SelectorPageComponent implements OnInit {
         switchMap(region => this.paisesService.getPaisesPorRegion( region ) )
       )
       //Nos suscribimos al valor que nos devuelve el pipe y llenamos el 2º selector
+      //en el value insertamos los códigos y lo visual el nombre del pais
       .subscribe(paises => {
         this.paises = paises;
       });
 
-    //Nos suscribimos al cambio del segundo selector, para coger el valor seleccionado
+
+    //Nos suscribimos al cambio del segundo selector, para coger el value seleccionado
     this.miFormulario.get('pais')?.valueChanges
+      //Gestionamos el primer observable con el operador pipe de rxjs
+      .pipe(
+        //Escucha el segundo selector y si este cambia resetea el valor del tercero
+        tap(( _ ) => {
+          this.fronteras = [];
+          this.miFormulario.get('fronteras')?.reset('');
+        }),
+        //Hacemos la petición a la api con el valor del segundo selector y a su vez
+        // modificaremos el valor que devuelve el pipe que este será el objeto pais de la api
+        switchMap( codigo => this.paisesService.getPaisPorCodigo(codigo))
+      )
+      //Nos suscribimos al valor que nos devuelve el pipe y llenamos el 3º selector
+      //con el código de los paises fronterizos de el objeto pais
       .subscribe( pais =>
-        console.log(pais)
+        this.fronteras = pais?.borders || []
       )
   }
 
