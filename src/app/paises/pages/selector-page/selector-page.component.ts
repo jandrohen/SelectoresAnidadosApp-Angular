@@ -10,7 +10,7 @@ import {PaisSmall} from "../../interfaces/paises.interfaces";
   selector: 'app-selector-page',
   templateUrl: './selector-page.component.html',
   styles: [
-  ]
+]
 })
 export class SelectorPageComponent implements OnInit {
 
@@ -25,6 +25,8 @@ export class SelectorPageComponent implements OnInit {
   paises: PaisSmall[] = [];
   fronteras: string[] = [];
 
+  // UI
+  cargando: boolean = false;
 
   constructor(private fb: FormBuilder,
               private paisesService: PaisesService) { }
@@ -39,15 +41,17 @@ export class SelectorPageComponent implements OnInit {
         //Escucha el primer selector y si este cambia resetea el valor del segundo
         tap(( _ ) => {
             this.miFormulario.get('pais')?.reset('');
+            this.cargando = true;
         }),
         //Hacemos la petición a la api con el valor del primer selector y a su vez
         // modificaremos el valor que devuelve el pipe que serán los paises de la api
-        switchMap(region => this.paisesService.getPaisesPorRegion( region ) )
+        switchMap(region => this.paisesService.getPaisesPorRegion( region ))
       )
       //Nos suscribimos al valor que nos devuelve el pipe y llenamos el 2º selector
       //en el value insertamos los códigos y lo visual el nombre del pais
       .subscribe(paises => {
         this.paises = paises;
+        this.cargando = false;
       });
 
 
@@ -58,7 +62,7 @@ export class SelectorPageComponent implements OnInit {
         //Escucha el segundo selector y si este cambia resetea el valor del tercero
         tap(( _ ) => {
           this.fronteras = [];
-          this.miFormulario.get('fronteras')?.reset('');
+          this.miFormulario.get('frontera')?.reset('');
         }),
         //Hacemos la petición a la api con el valor del segundo selector y a su vez
         // modificaremos el valor que devuelve el pipe que este será el objeto pais de la api
@@ -66,9 +70,7 @@ export class SelectorPageComponent implements OnInit {
       )
       //Nos suscribimos al valor que nos devuelve el pipe y llenamos el 3º selector
       //con el código de los paises fronterizos de el objeto pais
-      .subscribe( pais =>
-        this.fronteras = pais?.borders || []
-      )
+      .subscribe( pais => this.fronteras = pais?.borders || [] )
   }
 
   guardar(){
