@@ -23,7 +23,8 @@ export class SelectorPageComponent implements OnInit {
   // llenar selectores
   regiones: string[] = [];
   paises: PaisSmall[] = [];
-  fronteras: string[] = [];
+  fronteras: PaisSmall[] = [];
+
 
   // UI
   cargando: boolean = false;
@@ -34,7 +35,7 @@ export class SelectorPageComponent implements OnInit {
   ngOnInit(): void {
     this.regiones = this.paisesService.regiones;
 
-    //Nos suscribimos al cambio del primer selector, para coger el value seleccionado
+    //Nos suscribimos al cambio del primer selector(CONTINENTE), para coger el value seleccionado
     this.miFormulario.get('region')?.valueChanges
       //Gestionamos el primer observable con el operador pipe de rxjs
       .pipe(
@@ -55,22 +56,28 @@ export class SelectorPageComponent implements OnInit {
       });
 
 
-    //Nos suscribimos al cambio del segundo selector, para coger el value seleccionado
+    //Nos suscribimos al cambio del segundo selector(PAIS), para coger el value seleccionado
     this.miFormulario.get('pais')?.valueChanges
       //Gestionamos el primer observable con el operador pipe de rxjs
       .pipe(
-        //Escucha el segundo selector y si este cambia resetea el valor del tercero
+        //Escucha el segundo selector(PAIS) y si este cambia resetea el valor del tercer selector
         tap(( _ ) => {
-          this.fronteras = [];
           this.miFormulario.get('frontera')?.reset('');
+          this.cargando = true;
         }),
-        //Hacemos la petición a la api con el valor del segundo selector y a su vez
-        // modificaremos el valor que devuelve el pipe que este será el objeto pais de la api
-        switchMap( codigo => this.paisesService.getPaisPorCodigo(codigo))
+        //Hacemos la petición a la api con el valor del segundo selector(PAIS) y modificaremos el valor que devuelve
+        // el pipe devolviendo el objeto Pais
+        switchMap( codigo => this.paisesService.getPaisPorCodigo(codigo)),
+        //Cogemos los codigos de los paises que hacen frontera y hacemos una petición filtrada por cada uno de ellos
+        //estos nos devuelve un array de paises con codigo y nombre
+        switchMap( pais => this.paisesService.getPaisPorCodigos(pais?.borders!))
       )
-      //Nos suscribimos al valor que nos devuelve el pipe y llenamos el 3º selector
-      //con el código de los paises fronterizos de el objeto pais
-      .subscribe( pais => this.fronteras = pais?.borders || [] )
+      //Nos suscribimos al valor que nos devuelve el pipe y llenamos el tercer selector(FRONTERAS)
+      //con el código de los países fronterizos y los nombres de cada uno
+      .subscribe( paises => {
+        this.fronteras = paises;
+        this.cargando = false;
+      } )
   }
 
   guardar(){
